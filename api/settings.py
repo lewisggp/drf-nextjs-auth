@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 import environ
 import os
 
@@ -60,6 +61,13 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.facebook',
+    'allauth.socialaccount.providers.twitter_oauth2',
+    'allauth.socialaccount.providers.github',
+
+    #local
+    'socials',
 ]
 
 MIDDLEWARE = [
@@ -159,3 +167,104 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Only for dev environment
+if DEBUG:
+    # https://pypi.org/project/django-cors-headers/
+    CORS_ORIGIN_ALLOW_ALL = True 
+
+
+# Set up the authentication classes
+# https://www.django-rest-framework.org/api-guide/authentication
+
+REST_FRAMEWORK = {
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
+    ),
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+        "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
+    ),
+}
+
+
+# Enable the standard registration process
+# https://dj-rest-auth.readthedocs.io/en/latest/installation.html#registration-optional
+
+SITE_ID = 1
+
+
+# Enable JWT Authentication instead of Token/Session based
+# https://dj-rest-auth.readthedocs.io/en/latest/configuration.html
+
+REST_AUTH = {
+    'SESSION_LOGIN': True,
+    'USE_JWT': True,
+    'JWT_AUTH_COOKIE': 'lms-auth-access-token',
+    'JWT_AUTH_REFRESH_COOKIE': 'lms-auth-refresh-token',
+    'JWT_AUTH_REFRESH_COOKIE_PATH': '/',
+    'JWT_AUTH_SECURE': False,
+    'JWT_AUTH_HTTPONLY': False,
+}
+
+
+# Setting JWT Authentication
+# https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True, 
+    'UPDATE_LAST_LOGIN': True,
+    "SIGNING_KEY": env('JWT_SECRET_KEY')
+}
+
+
+# Provider specific settings
+# https://docs.allauth.org/en/latest/socialaccount/provider_configuration.html
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [ 'profile', 'email' ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        }
+    },
+    'facebook': {
+        'METHOD': 'oauth2',
+        'SCOPE': ['email', 'public_profile'],
+        'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
+        'VERIFIED_EMAIL': False,
+    },
+    'twitter': {
+        'METHOD': 'oauth2',
+        'SCOPE': ['tweet.read', 'users.read', 'offline.access'],
+        'AUTH_PARAMS': {
+            'force_login': 'true',
+        },
+        'VERIFIED_EMAIL': False,
+    },
+    'github': {
+        'SCOPE': [
+            'user',
+            'user:email',
+        ],
+    },
+}
+
+
+# Turn off email verification for social accounts
+
+SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
+SOCIALACCOUNT_EMAIL_REQUIRED = False
+
+
+# OAuth Configuration
+
+GOOGLE_CALLBACK_URL = env("GOOGLE_CALLBACK_URL")
+FACEBOOK_CALLBACK_URL = env("FACEBOOK_CALLBACK_URL")
+TWITTER_CALLBACK_URL = env("TWITTER_CALLBACK_URL")
+GITHUB_CALLBACK_URL = env("GITHUB_CALLBACK_URL")
