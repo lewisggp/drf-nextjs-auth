@@ -1,5 +1,6 @@
 // Next Auth Imports
 import NextAuth from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import FacebookProvider from 'next-auth/providers/facebook';
 import TwitterProvider from 'next-auth/providers/twitter';
@@ -23,6 +24,32 @@ const handler = NextAuth({
 	},
 	debug: process.env.NODE_ENV === 'development',
 	providers: [
+		CredentialsProvider({
+			name: 'Credentials',
+			credentials: {
+				username: { label: 'Username', type: 'text' },
+				password: { label: 'Password', type: 'password' },
+			},
+			async authorize(credentials) {
+				const response = await axios.post(
+					makeUrl(
+						process.env.BACKEND_API_BASE || '',
+						'auth',
+						'login'
+					),
+					credentials
+				);
+
+				return {
+					id: response.data.user.pk,
+					name: `${response.data.user.first_name} ${response.data.user.last_name}`,
+					email: response.data.user.email,
+					image: '',
+					accessToken: response.data.access,
+					refreshToken: response.data.refresh,
+				};
+			},
+		}),
 		GoogleProvider({
 			clientId: process.env.GOOGLE_CLIENT_ID || '',
 			clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
@@ -43,6 +70,14 @@ const handler = NextAuth({
 	],
 	callbacks: {
 		async jwt({ token, user, account }) {
+			if (account?.provider == 'credentials') {
+				return {
+					...token,
+					accessToken: user.accessToken,
+					refreshToken: user.refreshToken,
+				};
+			}
+
 			if (user && account?.provider) {
 				const version = account?.access_token ? 'v2' : 'v1';
 				const response = await axios.post(
