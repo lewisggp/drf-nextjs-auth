@@ -51,9 +51,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     
     # third party
-    "rest_framework",
+    'rest_framework',
     'rest_framework.authtoken',
-    "corsheaders",
+    'corsheaders',
     
     # authentication
     'dj_rest_auth',
@@ -81,6 +81,11 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+]
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
 ROOT_URLCONF = 'api.urls'
@@ -180,13 +185,13 @@ if DEBUG:
 # https://www.django-rest-framework.org/api-guide/authentication
 
 REST_FRAMEWORK = {
-    "DEFAULT_PERMISSION_CLASSES": (
-        "rest_framework.permissions.IsAuthenticated",
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
     ),
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework.authentication.BasicAuthentication",
-        "rest_framework.authentication.SessionAuthentication",
-        "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
     ),
 }
 
@@ -220,7 +225,7 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True, 
     'UPDATE_LAST_LOGIN': True,
-    "SIGNING_KEY": env('JWT_SECRET_KEY')
+    'SIGNING_KEY': env('JWT_SECRET_KEY')
 }
 
 
@@ -257,15 +262,20 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 
+# Enable login with username or email
+
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+
+
 # Turn off email verification for social accounts
 
-SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
 SOCIALACCOUNT_EMAIL_REQUIRED = False
 
 
 # OAuth Configuration
 
-GOOGLE_CALLBACK_URL = env("GOOGLE_CALLBACK_URL")
-FACEBOOK_CALLBACK_URL = env("FACEBOOK_CALLBACK_URL")
-TWITTER_CALLBACK_URL = env("TWITTER_CALLBACK_URL")
-GITHUB_CALLBACK_URL = env("GITHUB_CALLBACK_URL")
+GOOGLE_CALLBACK_URL = env('GOOGLE_CALLBACK_URL')
+FACEBOOK_CALLBACK_URL = env('FACEBOOK_CALLBACK_URL')
+TWITTER_CALLBACK_URL = env('TWITTER_CALLBACK_URL')
+GITHUB_CALLBACK_URL = env('GITHUB_CALLBACK_URL')

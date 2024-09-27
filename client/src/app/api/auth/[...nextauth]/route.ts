@@ -27,17 +27,24 @@ const handler = NextAuth({
 		CredentialsProvider({
 			name: 'Credentials',
 			credentials: {
-				username: { label: 'Username', type: 'text' },
+				username: { label: 'Username or Email', type: 'text' },
 				password: { label: 'Password', type: 'password' },
 			},
 			async authorize(credentials) {
+				const isEmail = /\S+@\S+\.\S+/.test(
+					credentials?.username || ''
+				);
+
 				const response = await axios.post(
 					makeUrl(
 						process.env.BACKEND_API_BASE || '',
 						'auth',
 						'login'
 					),
-					credentials
+					{
+						...credentials,
+						...(isEmail && { email: credentials?.username }),
+					}
 				);
 
 				return {
