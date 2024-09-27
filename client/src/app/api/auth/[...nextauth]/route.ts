@@ -66,8 +66,8 @@ const handler = NextAuth({
 			clientSecret: process.env.FACEBOOK_CLIENT_SECRET || '',
 		}),
 		TwitterProvider({
-			clientId: process.env.TWITTER_CLIENT_ID || '',
-			clientSecret: process.env.TWITTER_CLIENT_SECRET || '',
+			clientId: process.env.TWITTER_V1_CLIENT_ID || '', // process.env.TWITTER_CLIENT_ID
+			clientSecret: process.env.TWITTER_V1_CLIENT_SECRET || '', // process.env.TWITTER_CLIENT_SECRET
 			// version: '2.0', // Enable Twitter OAuth 2.0 (doesn't return email user)
 		}),
 		GitHubProvider({
@@ -86,14 +86,13 @@ const handler = NextAuth({
 			}
 
 			if (user && account?.provider) {
-				const version = account?.access_token ? 'v2' : 'v1';
+				const version = account?.access_token ? '' : '/v1';
+
 				const response = await axios.post(
 					makeUrl(
 						process.env.BACKEND_API_BASE || '',
-						'socials',
-						'oauth',
-						version,
-						account.provider
+						'auth',
+						account.provider + version
 					),
 					{
 						id_token: account.id_token,
