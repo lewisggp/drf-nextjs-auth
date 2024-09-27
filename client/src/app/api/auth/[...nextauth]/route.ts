@@ -1,13 +1,14 @@
 // Next Auth Imports
+import { cookies } from 'next/headers';
+
+// Third-party Imports
+import axios from 'axios';
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import FacebookProvider from 'next-auth/providers/facebook';
 import TwitterProvider from 'next-auth/providers/twitter';
 import GitHubProvider from 'next-auth/providers/github';
-
-// Third-party Imports
-import axios from 'axios';
 
 // Util Imports
 import { makeUrl } from '@/utils/url';
@@ -31,6 +32,8 @@ const handler = NextAuth({
 				password: { label: 'Password', type: 'password' },
 			},
 			async authorize(credentials) {
+				const isLogin = cookies().get('authIntent')?.value != 'signup';
+
 				const isEmail = /\S+@\S+\.\S+/.test(
 					credentials?.username || ''
 				);
@@ -39,7 +42,7 @@ const handler = NextAuth({
 					makeUrl(
 						process.env.BACKEND_API_BASE || '',
 						'auth',
-						'login'
+						isLogin ? 'login' : 'registration'
 					),
 					{
 						...credentials,

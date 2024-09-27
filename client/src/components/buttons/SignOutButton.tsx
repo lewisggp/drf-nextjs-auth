@@ -1,6 +1,6 @@
 'use client';
 
-// Next Auth Imports
+// Third-party Imports
 import { signOut } from 'next-auth/react';
 
 export default function SignOutButton() {

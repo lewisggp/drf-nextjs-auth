@@ -9,7 +9,7 @@ import LoadingSpinner from '@/components/loading/LoadingSpinner';
 import SignInButton from '@/components/buttons/SignInButton';
 import SignOutButton from '@/components/buttons/SignOutButton';
 
-export default function Login() {
+export default function Home() {
 	const { data: session, status } = useSession();
 	const loading = status === 'loading';
 
