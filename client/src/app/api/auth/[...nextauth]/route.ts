@@ -14,6 +14,8 @@ import GitHubProvider from 'next-auth/providers/github';
 import { makeUrl } from '@/utils/url';
 import { isJwtExpired } from '@/utils/jwt';
 
+const authIntent = () => cookies().get('authIntent')?.value;
+
 const handler = NextAuth({
 	secret: process.env.NEXTAUTH_SESSION_SECRET,
 	session: {
@@ -32,17 +34,15 @@ const handler = NextAuth({
 				password: { label: 'Password', type: 'password' },
 			},
 			async authorize(credentials) {
-				const isLogin = cookies().get('authIntent')?.value != 'signup';
-
-				const isEmail = /\S+@\S+\.\S+/.test(
-					credentials?.username || ''
-				);
+				const registration = authIntent() == 'signup' && 'registration';
+				const username = credentials?.username || '';
+				const isEmail = /\S+@\S+\.\S+/.test(username);
 
 				const response = await axios.post(
 					makeUrl(
-						process.env.BACKEND_API_BASE || '',
+						process.env.BACKEND_API_BASE,
 						'auth',
-						isLogin ? 'login' : 'registration'
+						registration || 'login'
 					),
 					{
 						...credentials,
@@ -89,13 +89,16 @@ const handler = NextAuth({
 			}
 
 			if (user && account?.provider) {
-				const version = account?.access_token ? '' : '/v1';
+				const version = !account?.access_token && 'v1';
+				const connect = authIntent() == 'signin' && 'connect';
 
 				const response = await axios.post(
 					makeUrl(
-						process.env.BACKEND_API_BASE || '',
+						process.env.BACKEND_API_BASE,
 						'auth',
-						account.provider + version
+						account.provider,
+						version,
+						connect
 					),
 					{
 						id_token: account.id_token,
@@ -115,7 +118,7 @@ const handler = NextAuth({
 			if (isJwtExpired(token.accessToken as string)) {
 				const response = await axios.post(
 					makeUrl(
-						process.env.BACKEND_API_BASE || '',
+						process.env.BACKEND_API_BASE,
 						'auth',
 						'token',
 						'refresh'

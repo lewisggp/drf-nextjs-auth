@@ -27,7 +27,7 @@ export default function SocialButton({
 					? 'bg-gray-800'
 					: ''
 			}`}
-			onClick={() => signIn(provider.id)}
+			onClick={() => signIn(provider.id, { callbackUrl: '/' })}
 		>
 			{authIntent == 'signin'
 				? `Sign in with ${provider.name}`
