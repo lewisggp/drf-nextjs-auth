@@ -1,13 +1,10 @@
-export const makeUrl = (...endpoints: string[]) => {
+export const makeUrl = (...endpoints: (string | false | undefined)[]) => {
 	const url = endpoints.reduce((prevUrl, currentPath) => {
-		if (prevUrl.length === 0) {
-			return prevUrl + currentPath;
-		}
+		if (!currentPath || currentPath == '') return prevUrl;
+		if (!currentPath.endsWith('/')) currentPath += '/';
 
-		return prevUrl.endsWith('/')
-			? prevUrl + currentPath + '/'
-			: prevUrl + '/' + currentPath + '/';
+		return prevUrl + currentPath;
 	}, '');
 
-	return url;
+	return `${url}`;
 };
