@@ -90,7 +90,7 @@ const handler = NextAuth({
 
 			if (user && account?.provider) {
 				const version = !account?.access_token && 'v1';
-				const connect = authIntent() == 'signin' && 'connect';
+				const sign = authIntent() == 'signin' ? 'signin' : 'signup';
 
 				const response = await axios.post(
 					makeUrl(
@@ -98,13 +98,16 @@ const handler = NextAuth({
 						'auth',
 						account.provider,
 						version,
-						connect
+						sign
 					),
 					{
 						id_token: account.id_token,
 						access_token:
 							account.access_token || account.oauth_token,
 						token_secret: account.oauth_token_secret,
+						email: user.email,
+						uid: user.id,
+						provider: account.provider,
 					}
 				);
 

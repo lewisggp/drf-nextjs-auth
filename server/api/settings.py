@@ -235,29 +235,25 @@ SIMPLE_JWT = {
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'SCOPE': [ 'profile', 'email' ],
-        'AUTH_PARAMS': {
-            'access_type': 'online',
-        }
+        'AUTH_PARAMS': { 'access_type': 'online' },
+        'VERIFIED_EMAIL': True,
     },
     'facebook': {
         'METHOD': 'oauth2',
-        'SCOPE': ['email', 'public_profile'],
-        'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
-        'VERIFIED_EMAIL': False,
+        'SCOPE': [ 'email', 'public_profile' ],
+        'AUTH_PARAMS': { 'auth_type': 'reauthenticate' },
+        'VERIFIED_EMAIL': True,
     },
     'twitter': {
         'METHOD': 'oauth2',
-        'SCOPE': ['tweet.read', 'users.read', 'offline.access'],
-        'AUTH_PARAMS': {
-            'force_login': 'true',
-        },
-        'VERIFIED_EMAIL': False,
+        'SCOPE': [ 'tweet.read', 'users.read', 'offline.access' ],
+        'AUTH_PARAMS': { 'force_login': 'true' },
+        'VERIFIED_EMAIL': True,
     },
     'github': {
-        'SCOPE': [
-            'user',
-            'user:email',
-        ],
+        'SCOPE': [ 'user', 'read:user', 'user:email' ],
+        'AUTH_PARAMS': { 'access_type': 'online' },
+        'VERIFIED_EMAIL': True,
     },
 }
 
@@ -267,10 +263,21 @@ SOCIALACCOUNT_PROVIDERS = {
 ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 
 
+# Request email address from 3rd party account provider
+
+SOCIALACCOUNT_QUERY_EMAIL = True
+
+
+# Enable automatic addition to the list of social accounts connected to the local account
+
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
+
+
 # Turn off email verification
+
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
-SOCIALACCOUNT_EMAIL_REQUIRED = False
 
 
 # OAuth Configuration
