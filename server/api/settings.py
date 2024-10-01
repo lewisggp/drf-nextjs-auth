@@ -258,6 +258,16 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 
+# Setting Unique Email per user
+
+ACCOUNT_UNIQUE_EMAIL = True
+
+
+# Email required for registration
+
+ACCOUNT_EMAIL_REQUIRED = True 
+
+
 # Enable login with username or email
 
 ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
