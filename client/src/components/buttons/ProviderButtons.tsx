@@ -6,8 +6,6 @@ import {
 	getProviders,
 	LiteralUnion,
 	ClientSafeProvider,
-	SignInOptions,
-	SignInResponse,
 } from 'next-auth/react';
 import { BuiltInProviderType } from 'next-auth/providers/index';
 
@@ -16,13 +14,11 @@ import SocialButton from './SocialButton';
 
 interface ProviderButtonsProps {
 	authIntent: 'signin' | 'signup';
-	options?: SignInOptions;
-	onSignIn?: (result: SignInResponse | undefined) => void;
+	onSignIn: (provider: ClientSafeProvider) => void;
 }
 
 export default function ProviderButtons({
 	authIntent,
-	options,
 	onSignIn,
 }: ProviderButtonsProps) {
 	const [providers, setProviders] = useState<Record<
@@ -49,8 +45,7 @@ export default function ProviderButtons({
 							key={provider.name}
 							authIntent={authIntent}
 							provider={provider}
-							options={options}
-							onSignIn={onSignIn}
+							onClick={() => onSignIn(provider)}
 						/>
 					);
 				})}

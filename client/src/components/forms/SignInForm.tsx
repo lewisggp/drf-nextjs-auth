@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 // Third-party Imports
-import { signIn, SignInResponse } from 'next-auth/react';
+import { ClientSafeProvider, signIn, SignInResponse } from 'next-auth/react';
 
 // Server Actions
 import { setCookie } from '@/app/actions/cookieActions';
@@ -42,6 +42,16 @@ const SignInForm = () => {
 		});
 
 		handleSignIn(result);
+	};
+
+	const onSignIn = async (provider: ClientSafeProvider) => {
+		const result = await signIn(provider.id, { redirect: false });
+
+		handleSignIn(result);
+
+		// popUp('/pop-up', `${provider.name} Sign In`, {
+		// 	provider: provider.id,
+		// });
 	};
 
 	const handleSignIn = (result?: SignInResponse) => {
@@ -114,11 +124,7 @@ const SignInForm = () => {
 			</div>
 
 			{/* Social login buttons */}
-			<ProviderButtons
-				authIntent='signin'
-				onSignIn={handleSignIn}
-				options={{ redirect: false, callbackUrl: '/' }}
-			/>
+			<ProviderButtons authIntent='signin' onSignIn={onSignIn} />
 
 			{/* Sign Up prompt */}
 			<p className='text-center text-gray-600 mt-4'>
