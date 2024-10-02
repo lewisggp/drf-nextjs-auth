@@ -7,10 +7,13 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 // Third-party Imports
-import { signIn } from 'next-auth/react';
+import { signIn, SignInResponse } from 'next-auth/react';
 
 // Server Actions
 import { setCookie } from '@/app/actions/cookieActions';
+
+// Type Imports
+import { RegistrationError } from '@/types/django-auth';
 
 // Component Imports
 import ProviderButtons from '../buttons/ProviderButtons';
@@ -23,7 +26,7 @@ const SignUpForm = () => {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [confirmPassword, setConfirmPassword] = useState('');
-	const [error, setError] = useState('');
+	const [errors, setErrors] = useState<RegistrationError>();
 
 	useEffect(() => {
 		const setAuthIntentCookie = async () => {
@@ -37,7 +40,7 @@ const SignUpForm = () => {
 		e.preventDefault();
 
 		if (password !== confirmPassword) {
-			setError('Passwords do not match.');
+			setErrors({ password1: ['Passwords do not match.'] });
 			return;
 		}
 
@@ -48,21 +51,25 @@ const SignUpForm = () => {
 			last_name: lastName,
 			password1: password,
 			password2: password,
-			callbackUrl: '/sign-in',
+			redirect: false,
 		});
 
+		handleSignIn(result);
+	};
+
+	const handleSignIn = (result?: SignInResponse) => {
+		console.log('result', result);
+
 		if (result?.error) {
-			setError(result.error);
+			setErrors(JSON.parse(result?.error));
 		} else {
-			// Maneja la redirección o el éxito
+			router.push('/');
 		}
 	};
 
 	return (
 		<div className='max-w-md mx-auto p-8 border border-gray-300 rounded-lg shadow-lg'>
 			<h1 className='text-2xl font-semibold text-center mb-6'>Sign Up</h1>
-
-			{error && <p className='text-red-500 text-center mb-4'>{error}</p>}
 
 			{/* Sign Up form */}
 			<form className='space-y-6' onSubmit={handleSubmit}>
@@ -82,6 +89,11 @@ const SignUpForm = () => {
 						required
 						className='mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm'
 					/>
+					{errors?.username?.map((error, index) => (
+						<p className='text-red-500 text-sm mt-1' key={index}>
+							{error}
+						</p>
+					))}
 				</div>
 				<div>
 					<label
@@ -133,6 +145,11 @@ const SignUpForm = () => {
 						required
 						className='mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm'
 					/>
+					{errors?.email?.map((error, index) => (
+						<p className='text-red-500 text-sm mt-1' key={index}>
+							{error}
+						</p>
+					))}
 				</div>
 				<div>
 					<label
@@ -150,6 +167,11 @@ const SignUpForm = () => {
 						required
 						className='mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm'
 					/>
+					{errors?.password1?.map((error, index) => (
+						<p className='text-red-500 text-sm mt-1' key={index}>
+							{error}
+						</p>
+					))}
 				</div>
 				<div>
 					<label
@@ -184,7 +206,11 @@ const SignUpForm = () => {
 			</div>
 
 			{/* Social login buttons */}
-			<ProviderButtons authIntent='signup' />
+			<ProviderButtons
+				authIntent='signup'
+				onSignIn={handleSignIn}
+				options={{ redirect: false, callbackUrl: '/' }}
+			/>
 
 			{/* Sign In prompt */}
 			<p className='text-center text-gray-600 mt-4'>

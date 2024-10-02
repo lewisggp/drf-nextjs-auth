@@ -7,10 +7,13 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 // Third-party Imports
-import { signIn } from 'next-auth/react';
+import { signIn, SignInResponse } from 'next-auth/react';
 
 // Server Actions
 import { setCookie } from '@/app/actions/cookieActions';
+
+// Type Imports
+import { LoginError } from '@/types/django-auth';
 
 // Component Imports
 import ProviderButtons from '../buttons/ProviderButtons';
@@ -19,7 +22,7 @@ const SignInForm = () => {
 	const router = useRouter();
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
-	const [error, setError] = useState('');
+	const [errors, setErrors] = useState<LoginError>();
 
 	useEffect(() => {
 		const setAuthIntentCookie = async () => {
@@ -35,11 +38,17 @@ const SignInForm = () => {
 		const result = await signIn('credentials', {
 			username,
 			password,
-			callbackUrl: '/',
+			redirect: false,
 		});
 
+		handleSignIn(result);
+	};
+
+	const handleSignIn = (result?: SignInResponse) => {
 		if (result?.error) {
-			setError(result.error);
+			setErrors(JSON.parse(result?.error));
+		} else {
+			router.push('/');
 		}
 	};
 
@@ -47,7 +56,11 @@ const SignInForm = () => {
 		<div className='max-w-md mx-auto p-8 border border-gray-300 rounded-lg shadow-lg'>
 			<h1 className='text-2xl font-semibold text-center mb-6'>Sign In</h1>
 
-			{error && <p className='text-red-500 text-center mb-4'>{error}</p>}
+			{errors?.non_field_errors?.map((error, index) => (
+				<p className='text-red-500 text-sm m-1 text-center' key={index}>
+					{error}
+				</p>
+			))}
 
 			{/* Credentials form */}
 			<form className='space-y-6' onSubmit={handleSubmit}>
@@ -101,7 +114,11 @@ const SignInForm = () => {
 			</div>
 
 			{/* Social login buttons */}
-			<ProviderButtons authIntent='signin' />
+			<ProviderButtons
+				authIntent='signin'
+				onSignIn={handleSignIn}
+				options={{ redirect: false, callbackUrl: '/' }}
+			/>
 
 			{/* Sign Up prompt */}
 			<p className='text-center text-gray-600 mt-4'>
