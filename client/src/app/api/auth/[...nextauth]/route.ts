@@ -2,7 +2,7 @@
 import { cookies } from 'next/headers';
 
 // Third-party Imports
-import axios from 'axios';
+import axios, { isAxiosError } from 'axios';
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
@@ -13,6 +13,7 @@ import GitHubProvider from 'next-auth/providers/github';
 // Util Imports
 import { makeUrl } from '@/utils/url';
 import { isJwtExpired } from '@/utils/jwt';
+import { AuthResponse, isAuthResponse, isAuthError } from '@/types/django-auth';
 
 const authIntent = () => cookies().get('authIntent')?.value;
 
@@ -38,26 +39,45 @@ const handler = NextAuth({
 				const username = credentials?.username || '';
 				const isEmail = /\S+@\S+\.\S+/.test(username);
 
-				const response = await axios.post(
-					makeUrl(
-						process.env.BACKEND_API_BASE,
-						'auth',
-						registration || 'login'
-					),
-					{
-						...credentials,
-						...(isEmail && { email: credentials?.username }),
-					}
-				);
+				try {
+					const response = await axios.post<AuthResponse>(
+						makeUrl(
+							process.env.BACKEND_API_BASE,
+							'auth',
+							registration || 'login'
+						),
+						{
+							...credentials,
+							...(isEmail && { email: credentials?.username }),
+						}
+					);
 
-				return {
-					id: response.data.user.pk,
-					name: `${response.data.user.first_name} ${response.data.user.last_name}`,
-					email: response.data.user.email,
-					image: '',
-					accessToken: response.data.access,
-					refreshToken: response.data.refresh,
-				};
+					if (
+						response.status === 200 &&
+						isAuthResponse(response.data)
+					) {
+						return {
+							id: `${response.data.user.pk}`,
+							name: `${response.data.user.first_name} ${response.data.user.last_name}`,
+							email: response.data.user.email,
+							image: '',
+							accessToken: response.data.access,
+							refreshToken: response.data.refresh,
+						};
+					}
+				} catch (error) {
+					if (
+						isAxiosError(error) &&
+						isAuthError(error.response?.data)
+					) {
+						return {
+							id: 'error',
+							error: error.response.data,
+						};
+					}
+				}
+
+				throw new Error('Uknown error');
 			},
 		}),
 		GoogleProvider({
@@ -79,42 +99,52 @@ const handler = NextAuth({
 		}),
 	],
 	callbacks: {
+		async signIn({ user, account }) {
+			if (account?.provider && account?.provider != 'credentials') {
+				const version = !account?.access_token && 'v1';
+				const sign = authIntent() == 'signin' ? 'signin' : 'signup';
+
+				try {
+					const response = await axios.post(
+						makeUrl(
+							process.env.BACKEND_API_BASE,
+							'auth',
+							account.provider,
+							version,
+							sign
+						),
+						{
+							id_token: account.id_token,
+							access_token:
+								account.access_token || account.oauth_token,
+							token_secret: account.oauth_token_secret,
+							email: user.email,
+							uid: user.id,
+							provider: account.provider,
+						}
+					);
+
+					user.accessToken = response.data.access;
+					user.refreshToken = response.data.refresh;
+				} catch (error: unknown) {
+					if (isAxiosError(error)) {
+						user.error = error.response?.data;
+					}
+				}
+			}
+
+			if (user.error) {
+				throw new Error(JSON.stringify(user.error));
+			}
+
+			return true;
+		},
 		async jwt({ token, user, account }) {
-			if (account?.provider == 'credentials') {
+			if (account?.provider) {
 				return {
 					...token,
 					accessToken: user.accessToken,
 					refreshToken: user.refreshToken,
-				};
-			}
-
-			if (user && account?.provider) {
-				const version = !account?.access_token && 'v1';
-				const sign = authIntent() == 'signin' ? 'signin' : 'signup';
-
-				const response = await axios.post(
-					makeUrl(
-						process.env.BACKEND_API_BASE,
-						'auth',
-						account.provider,
-						version,
-						sign
-					),
-					{
-						id_token: account.id_token,
-						access_token:
-							account.access_token || account.oauth_token,
-						token_secret: account.oauth_token_secret,
-						email: user.email,
-						uid: user.id,
-						provider: account.provider,
-					}
-				);
-
-				return {
-					...token,
-					accessToken: response.data.access,
-					refreshToken: response.data.refresh,
 				};
 			}
 
@@ -157,6 +187,9 @@ const handler = NextAuth({
 				refreshToken: token.refreshToken,
 			};
 		},
+	},
+	pages: {
+		signIn: '/sign-in',
 	},
 });
 
