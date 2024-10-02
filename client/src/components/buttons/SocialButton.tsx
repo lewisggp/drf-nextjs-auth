@@ -2,17 +2,34 @@
 import React from 'react';
 
 // Third-party Imports
-import { ClientSafeProvider, signIn } from 'next-auth/react';
+import {
+	signIn,
+	ClientSafeProvider,
+	SignInOptions,
+	SignInResponse,
+} from 'next-auth/react';
 
 interface SocialButtonProps {
-	provider: ClientSafeProvider;
 	authIntent: 'signin' | 'signup';
+	provider: ClientSafeProvider;
+	options?: SignInOptions;
+	onSignIn?: (result: SignInResponse | undefined) => void;
 }
 
 export default function SocialButton({
-	provider,
 	authIntent,
+	provider,
+	options,
+	onSignIn,
 }: SocialButtonProps) {
+	const handleSignIn = async () => {
+		const result = await signIn(provider.id, options);
+
+		if (onSignIn) {
+			onSignIn(result);
+		}
+	};
+
 	return (
 		<button
 			key={provider.id}
@@ -27,7 +44,7 @@ export default function SocialButton({
 					? 'bg-gray-800'
 					: ''
 			}`}
-			onClick={() => signIn(provider.id, { callbackUrl: '/' })}
+			onClick={handleSignIn}
 		>
 			{authIntent == 'signin'
 				? `Sign in with ${provider.name}`
