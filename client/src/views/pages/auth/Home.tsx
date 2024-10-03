@@ -25,9 +25,11 @@ export default function Home() {
 					priority
 				/>
 				{loading ? (
-					<LoadingSpinner />
+					<div className='mt-4'>
+						<LoadingSpinner />
+					</div>
 				) : !session ? (
-					<div className='flex flex-col items-center'>
+					<div className='flex flex-col items-center mt-4'>
 						<p className='text-lg'>Not signed in</p>
 						<SignInButton />
 						<pre className='mt-4 text-sm text-gray-700'>
@@ -35,10 +37,16 @@ export default function Home() {
 						</pre>
 					</div>
 				) : (
-					<div className='flex flex-col items-center'>
-						<p className='text-lg'>
-							Signed in as {session.user?.email}
-						</p>
+					<div className='flex flex-col items-center mt-4'>
+						{session.user?.email ? (
+							<p className='text-lg'>
+								Signed in as {session.user?.email}
+							</p>
+						) : (
+							<p className='text-lg'>
+								Hello {session.user?.name}!
+							</p>
+						)}
 						<SignOutButton />
 						<pre className='mt-4 text-sm text-gray-700'>
 							User has access token

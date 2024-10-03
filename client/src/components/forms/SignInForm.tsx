@@ -24,7 +24,7 @@ import { LoginError } from '@/types/django-auth';
 import { popUp } from '@/utils/pop-up';
 
 // Component Imports
-import ProviderButtons from '../buttons/ProviderButtons';
+import ProviderButtons from '@/components/buttons/ProviderButtons';
 
 const SignInForm = () => {
 	const router = useRouter();
@@ -78,7 +78,7 @@ const SignInForm = () => {
 	};
 
 	return (
-		<div className='max-w-md mx-auto p-8 border border-gray-300 rounded-lg shadow-lg'>
+		<div className='w-80 mx-auto p-8 border border-gray-300 rounded-lg shadow-lg'>
 			<h1 className='text-2xl font-semibold text-center mb-6'>Sign In</h1>
 
 			{errors?.non_field_errors?.map((error, index) => (

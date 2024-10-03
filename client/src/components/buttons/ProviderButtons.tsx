@@ -10,7 +10,8 @@ import {
 import { BuiltInProviderType } from 'next-auth/providers/index';
 
 // Component Imports
-import SocialButton from './SocialButton';
+import SocialButton from '@/components/buttons/SocialButton';
+import LoadingSpinner from '@/components/loading/LoadingSpinner';
 
 interface ProviderButtonsProps {
 	authIntent: 'signin' | 'signup';
@@ -25,15 +26,25 @@ export default function ProviderButtons({
 		LiteralUnion<BuiltInProviderType, string>,
 		ClientSafeProvider
 	> | null>(null);
+	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
 		const fetchProviders = async () => {
 			const res = await getProviders();
 			setProviders(res);
+			setLoading(false);
 		};
 
 		fetchProviders();
 	}, []);
+
+	if (loading) {
+		return (
+			<div className='mt-4'>
+				<LoadingSpinner />
+			</div>
+		);
+	}
 
 	return (
 		<div className='space-y-4'>
