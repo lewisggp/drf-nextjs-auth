@@ -7,7 +7,12 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 // Third-party Imports
-import { ClientSafeProvider, signIn, SignInResponse } from 'next-auth/react';
+import {
+	ClientSafeProvider,
+	signIn,
+	SignInResponse,
+	useSession,
+} from 'next-auth/react';
 
 // Server Actions
 import { setCookie } from '@/app/actions/cookieActions';
@@ -15,11 +20,15 @@ import { setCookie } from '@/app/actions/cookieActions';
 // Type Imports
 import { LoginError } from '@/types/django-auth';
 
+// Util Imports
+import { popUp } from '@/utils/pop-up';
+
 // Component Imports
 import ProviderButtons from '../buttons/ProviderButtons';
 
 const SignInForm = () => {
 	const router = useRouter();
+	const { status } = useSession();
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
 	const [errors, setErrors] = useState<LoginError>();
@@ -31,6 +40,12 @@ const SignInForm = () => {
 
 		setAuthIntentCookie();
 	}, []);
+
+	useEffect(() => {
+		if (status === 'authenticated') {
+			router.push('/');
+		}
+	}, [status, router]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -45,13 +60,13 @@ const SignInForm = () => {
 	};
 
 	const onSignIn = async (provider: ClientSafeProvider) => {
-		const result = await signIn(provider.id, { redirect: false });
+		/* const result = await signIn(provider.id);
 
-		handleSignIn(result);
+		handleSignIn(result); */
 
-		// popUp('/pop-up', `${provider.name} Sign In`, {
-		// 	provider: provider.id,
-		// });
+		popUp('/auth-pop-up', `${provider.name} Sign In`, {
+			provider: provider.id,
+		});
 	};
 
 	const handleSignIn = (result?: SignInResponse) => {
